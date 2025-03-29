@@ -25,9 +25,11 @@
   "dependencies": {
     "axios": "^1.8.4",
     "dotenv": "^16.4.7",
+    "jalaali-js": "^1.2.8",
     "telegraf": "^4.16.3"
   },
   "devDependencies": {
+    "@types/jalaali-js": "^1.2.0",
     "@types/node": "^22.13.14",
     "nodemon": "^3.1.9",
     "prettier": "^3.2.5",

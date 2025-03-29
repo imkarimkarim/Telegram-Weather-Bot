@@ -2,6 +2,7 @@ import { Telegraf } from 'telegraf';
 import dotenv from 'dotenv';
 import https from 'https';
 import axios from 'axios';
+import jalaali from 'jalaali-js';
 
 dotenv.config();
 
@@ -18,21 +19,94 @@ const bot = new Telegraf(process.env.BOT_TOKEN!, {
   },
 });
 
+function getJalaaliMonthName(month: number): string {
+  const months = [
+    'فروردین',
+    'اردیبهشت',
+    'خرداد',
+    'تیر',
+    'مرداد',
+    'شهریور',
+    'مهر',
+    'آبان',
+    'آذر',
+    'دی',
+    'بهمن',
+    'اسفند',
+  ];
+  return months[month - 1];
+}
+
+interface ForecastItem {
+  dt: number;
+  main: {
+    temp: number;
+  };
+  weather: Array<{
+    main: string;
+  }>;
+}
+
 async function getWeather(city: string = 'Astaneh-ye Ashrafiyeh') {
   console.log(`🌡️ Fetching weather for ${city}...`);
   try {
-    const response = await axios.get(
-      `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${process.env.OPENWEATHER_API_KEY}&units=metric`
-    );
+    const [currentWeather, forecast] = await Promise.all([
+      axios.get(
+        `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${process.env.OPENWEATHER_API_KEY}&units=metric`
+      ),
+      axios.get(
+        `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${process.env.OPENWEATHER_API_KEY}&units=metric`
+      ),
+    ]);
+
     console.log(`✅ Weather data received for ${city}`);
-    const data = response.data;
-    return `🌡️ Weather in ${data.name}:
+    const data = currentWeather.data;
+    const forecastData = forecast.data;
+
+    // Get current date
+    const now = new Date();
+    const gregorianDate = now.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+
+    // Convert to Jalali
+    const jalaaliDate = jalaali.toJalaali(now.getFullYear(), now.getMonth() + 1, now.getDate());
+    const jalaaliFormatted = `${jalaaliDate.jd} ${getJalaaliMonthName(jalaaliDate.jm)} ${jalaaliDate.jy}`;
+
+    // Format hourly forecast
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+
+    const hourlyForecast = forecastData.list
+      .filter((item: ForecastItem) => {
+        const forecastTime = new Date(item.dt * 1000);
+        return forecastTime <= endOfDay;
+      })
+      .map((item: ForecastItem) => {
+        const time = new Date(item.dt * 1000).toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        });
+        return `${time}: ${Math.round(item.main.temp)}°C ${getWeatherEmoji(item.weather[0].main)}`;
+      })
+      .join('\n');
+
+    return `📅 ${gregorianDate}
+📅 ${jalaaliFormatted}
+
+🌡️ Weather in ${data.name}:
 ${getWeatherEmoji(data.weather[0].main)} ${data.weather[0].description}
 🌡️ Temperature: ${Math.round(data.main.temp)}°C
 🤔 Feels like: ${Math.round(data.main.feels_like)}°C
 💧 Humidity: ${data.main.humidity}%
 💨 Wind: ${data.wind.speed} m/s
-🌧️ Rain probability: ${Math.round((data.rain?.['1h'] || 0) * 100)}%`;
+🌧️ Rain probability: ${Math.round((data.rain?.['1h'] || 0) * 100)}%
+
+⏰ Next 24 hours:
+${hourlyForecast}`;
   } catch (error: any) {
     console.error(`❌ Error fetching weather for ${city}:`, error.message);
     return '❌ Error fetching weather data. Please try again later.';

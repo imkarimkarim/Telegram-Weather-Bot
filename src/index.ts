@@ -27,20 +27,40 @@ async function getWeather(city: string = 'Astaneh-ye Ashrafiyeh') {
     console.log(`✅ Weather data received for ${city}`);
     const data = response.data;
     return `🌡️ Weather in ${data.name}:
-Temperature: ${Math.round(data.main.temp)}°C
-Feels like: ${Math.round(data.main.feels_like)}°C
-Humidity: ${data.main.humidity}%
-Wind: ${data.wind.speed} m/s
-${data.weather[0].description}`;
+${getWeatherEmoji(data.weather[0].main)} ${data.weather[0].description}
+🌡️ Temperature: ${Math.round(data.main.temp)}°C
+🤔 Feels like: ${Math.round(data.main.feels_like)}°C
+💧 Humidity: ${data.main.humidity}%
+💨 Wind: ${data.wind.speed} m/s
+🌧️ Rain probability: ${Math.round((data.rain?.['1h'] || 0) * 100)}%`;
   } catch (error: any) {
     console.error(`❌ Error fetching weather for ${city}:`, error.message);
     return '❌ Error fetching weather data. Please try again later.';
   }
 }
 
+// Add this function before the bot commands
+function getWeatherEmoji(weatherMain: string): string {
+  const emojis: { [key: string]: string } = {
+    Clear: '☀️',
+    Clouds: '☁️',
+    Rain: '🌧️',
+    Drizzle: '🌦️',
+    Thunderstorm: '⛈️',
+    Snow: '🌨️',
+    Mist: '🌫️',
+    Fog: '🌫️',
+    Haze: '🌫️',
+    Smoke: '🌫️',
+  };
+  return emojis[weatherMain] || '🌤️';
+}
+
 // Start command
 bot.command('start', ctx => {
-  console.log(`👋 New user started bot: ${ctx.from.username || ctx.from.id}`);
+  console.log(
+    `👋 New user started bot: ${ctx.from.username || ctx.from.id} (Chat ID: ${ctx.chat.id})`
+  );
   ctx.reply(
     'Hello! Welcome to my weather bot 👋\nSend any message to get weather in Astaneh-ye Ashrafiyeh, or use /weather <city> for a specific city.'
   );
@@ -48,7 +68,9 @@ bot.command('start', ctx => {
 
 // Help command
 bot.command('help', ctx => {
-  console.log(`❓ Help requested by: ${ctx.from.username || ctx.from.id}`);
+  console.log(
+    `❓ Help requested by: ${ctx.from.username || ctx.from.id} (Chat ID: ${ctx.chat.id})`
+  );
   ctx.reply(
     'Available commands:\n/weather <city> - Get weather for a specific city\n/start - Start the bot'
   );
@@ -57,7 +79,9 @@ bot.command('help', ctx => {
 // Weather command
 bot.command('weather', async ctx => {
   const city = ctx.message.text.split(' ').slice(1).join(' ') || 'Astaneh-ye Ashrafiyeh';
-  console.log(`🌍 Weather command for ${city} by ${ctx.from.username || ctx.from.id}`);
+  console.log(
+    `🌍 Weather command for ${city} by ${ctx.from.username || ctx.from.id} (Chat ID: ${ctx.chat.id})`
+  );
   const weather = await getWeather(city);
   ctx.reply(weather);
 });
@@ -65,7 +89,9 @@ bot.command('weather', async ctx => {
 // Handle text messages
 bot.on('text', async ctx => {
   if (!ctx.message.text.startsWith('/')) {
-    console.log(`💬 Text message from ${ctx.from.username || ctx.from.id}: ${ctx.message.text}`);
+    console.log(
+      `💬 Text message from ${ctx.from.username || ctx.from.id} (Chat ID: ${ctx.chat.id}): ${ctx.message.text}`
+    );
     const weather = await getWeather();
     ctx.reply(weather);
   }
@@ -74,6 +100,14 @@ bot.on('text', async ctx => {
 // Launch bot
 bot.launch();
 console.log('✅ Bot is running!');
+
+// Send weather report to specified chat ID on startup
+if (process.env.CHAT_ID) {
+  console.log('📱 Sending startup weather report...');
+  getWeather().then(weather => {
+    bot.telegram.sendMessage(process.env.CHAT_ID!, weather);
+  });
+}
 
 // Enable graceful stop
 process.once('SIGINT', () => {

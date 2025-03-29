@@ -88,21 +88,18 @@ async function getWeather(city: string = 'Astaneh-ye Ashrafiyeh') {
         const forecastTime = new Date(item.dt * 1000);
         return forecastTime <= endOfDay;
       })
-      .reduce((acc: string[], item: ForecastItem, index: number) => {
-        // Only include every 2nd forecast (2-hour intervals)
-        if (index % 2 === 0) {
-          const time = new Date(item.dt * 1000).toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true,
-          });
-          acc.push(
-            `${time}: ${Math.round(item.main.temp)}°C ${getWeatherEmoji(item.weather[0].main)} (${Math.round(item.pop * 100)}% rain)`
-          );
-        }
+      .reduce((acc: string[], item: ForecastItem) => {
+        const time = new Date(item.dt * 1000).toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        });
+        acc.push(
+          `${time}: ${Math.round(item.main.temp)}°C ${getWeatherEmoji(item.weather[0].main)} (${Math.round(item.pop * 100)}% rain)`
+        );
         return acc;
       }, [])
-      .slice(0, 12) // Ensure we only get 12 reports
+      .slice(0, 24) // Ensure we only get 24 reports
       .join('\n');
 
     return `📅 ${gregorianDate}

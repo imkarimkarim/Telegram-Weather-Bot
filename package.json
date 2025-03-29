@@ -5,8 +5,10 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\""
   },
   "repository": {
     "type": "git",
@@ -21,11 +23,14 @@
   "homepage": "https://github.com/imkarimkarim/t-weather-notif#readme",
   "description": "",
   "dependencies": {
+    "axios": "^1.8.4",
     "dotenv": "^16.4.7",
     "telegraf": "^4.16.3"
   },
   "devDependencies": {
     "@types/node": "^22.13.14",
+    "nodemon": "^3.1.9",
+    "prettier": "^3.2.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2"
   }

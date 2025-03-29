@@ -23,9 +23,11 @@
   "homepage": "https://github.com/imkarimkarim/t-weather-notif#readme",
   "description": "",
   "dependencies": {
+    "@types/node-cron": "^3.0.11",
     "axios": "^1.8.4",
     "dotenv": "^16.4.7",
     "jalaali-js": "^1.2.8",
+    "node-cron": "^3.0.3",
     "telegraf": "^4.16.3"
   },
   "devDependencies": {

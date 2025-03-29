@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import https from 'https';
 import axios from 'axios';
 import jalaali from 'jalaali-js';
+import cron from 'node-cron';
 import { getDefaultCity, setDefaultCity, resetDefaultCity } from './db';
 
 dotenv.config();
@@ -46,6 +47,7 @@ interface ForecastItem {
   weather: Array<{
     main: string;
   }>;
+  pop: number; // Probability of precipitation
 }
 
 async function getWeather(city: string = 'Astaneh-ye Ashrafiyeh') {
@@ -95,7 +97,7 @@ async function getWeather(city: string = 'Astaneh-ye Ashrafiyeh') {
             hour12: true,
           });
           acc.push(
-            `${time}: ${Math.round(item.main.temp)}°C ${getWeatherEmoji(item.weather[0].main)}`
+            `${time}: ${Math.round(item.main.temp)}°C ${getWeatherEmoji(item.weather[0].main)} (${Math.round(item.pop * 100)}% rain)`
           );
         }
         return acc;
@@ -349,6 +351,23 @@ bot.on('text', async ctx => {
 // Launch bot
 bot.launch();
 console.log('✅ Bot is running!');
+
+// Schedule daily weather report at 6 AM Tehran time (UTC+3:30)
+cron.schedule('30 2 * * *', async () => {
+  console.log('🌅 Sending scheduled weather report...');
+  if (process.env.CHAT_ID) {
+    const weather = await getWeather();
+    try {
+      await bot.telegram.sendMessage(process.env.CHAT_ID, weather);
+    } catch (error: any) {
+      if (error.description === 'Chat not found') {
+        console.log('❌ Chat not found. Skipping scheduled weather report.');
+      } else {
+        console.error('❌ Error sending scheduled weather report:', error);
+      }
+    }
+  }
+});
 
 // Send weather report to specified chat ID on startup
 if (process.env.CHAT_ID) {

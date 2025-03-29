@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import https from 'https';
 import axios from 'axios';
 import jalaali from 'jalaali-js';
+import { getDefaultCity, setDefaultCity, resetDefaultCity } from './db';
 
 dotenv.config();
 
@@ -76,22 +77,30 @@ async function getWeather(city: string = 'Astaneh-ye Ashrafiyeh') {
     const jalaaliDate = jalaali.toJalaali(now.getFullYear(), now.getMonth() + 1, now.getDate());
     const jalaaliFormatted = `${jalaaliDate.jd} ${getJalaaliMonthName(jalaaliDate.jm)} ${jalaaliDate.jy}`;
 
-    // Format hourly forecast
+    // Format hourly forecast - get 12 reports with 2-hour intervals
     const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+    const twoHoursInMs = 2 * 60 * 60 * 1000;
 
     const hourlyForecast = forecastData.list
       .filter((item: ForecastItem) => {
         const forecastTime = new Date(item.dt * 1000);
         return forecastTime <= endOfDay;
       })
-      .map((item: ForecastItem) => {
-        const time = new Date(item.dt * 1000).toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true,
-        });
-        return `${time}: ${Math.round(item.main.temp)}°C ${getWeatherEmoji(item.weather[0].main)}`;
-      })
+      .reduce((acc: string[], item: ForecastItem, index: number) => {
+        // Only include every 2nd forecast (2-hour intervals)
+        if (index % 2 === 0) {
+          const time = new Date(item.dt * 1000).toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+          });
+          acc.push(
+            `${time}: ${Math.round(item.main.temp)}°C ${getWeatherEmoji(item.weather[0].main)}`
+          );
+        }
+        return acc;
+      }, [])
+      .slice(0, 12) // Ensure we only get 12 reports
       .join('\n');
 
     return `📅 ${gregorianDate}
@@ -132,6 +141,10 @@ function getWeatherEmoji(weatherMain: string): string {
 
 // Start command
 bot.command('start', ctx => {
+  if (ctx.chat.id.toString() !== process.env.CHAT_ID) {
+    ctx.reply('🤖 Nice try! But I only respond to my master. Go get your own weather bot! 😤');
+    return;
+  }
   console.log(
     `👋 New user started bot: ${ctx.from.username || ctx.from.id} (Chat ID: ${ctx.chat.id})`
   );
@@ -142,17 +155,30 @@ bot.command('start', ctx => {
 
 // Help command
 bot.command('help', ctx => {
+  if (ctx.chat.id.toString() !== process.env.CHAT_ID) {
+    ctx.reply('🤖 Nice try! But I only respond to my master. Go get your own weather bot! 😤');
+    return;
+  }
   console.log(
     `❓ Help requested by: ${ctx.from.username || ctx.from.id} (Chat ID: ${ctx.chat.id})`
   );
   ctx.reply(
-    'Available commands:\n/weather <city> - Get weather for a specific city\n/start - Start the bot'
+    'Available commands:\n' +
+      '/weather <city> - Get weather for a specific city\n' +
+      '/setdefault <city> - Set your default city\n' +
+      '/reset - Reset to default city (Astaneh-ye Ashrafiyeh)\n' +
+      '/start - Start the bot'
   );
 });
 
 // Weather command
 bot.command('weather', async ctx => {
-  const city = ctx.message.text.split(' ').slice(1).join(' ') || 'Astaneh-ye Ashrafiyeh';
+  if (ctx.chat.id.toString() !== process.env.CHAT_ID) {
+    ctx.reply('🤖 Nice try! But I only respond to my master. Go get your own weather bot! 😤');
+    return;
+  }
+  const city =
+    ctx.message.text.split(' ').slice(1).join(' ') || getDefaultCity(ctx.chat.id.toString());
   console.log(
     `🌍 Weather command for ${city} by ${ctx.from.username || ctx.from.id} (Chat ID: ${ctx.chat.id})`
   );
@@ -160,13 +186,46 @@ bot.command('weather', async ctx => {
   ctx.reply(weather);
 });
 
+// Set default city command
+bot.command('setdefault', async ctx => {
+  if (ctx.chat.id.toString() !== process.env.CHAT_ID) {
+    ctx.reply('🤖 Nice try! But I only respond to my master. Go get your own weather bot! 😤');
+    return;
+  }
+  const city = ctx.message.text.split(' ').slice(1).join(' ');
+  if (!city) {
+    ctx.reply('Please provide a city name. Example: /setdefault Tehran');
+    return;
+  }
+  setDefaultCity(ctx.chat.id.toString(), city);
+  ctx.reply(`✅ Default city set to ${city}`);
+  const weather = await getWeather(city);
+  ctx.reply(weather);
+});
+
+// Reset default city command
+bot.command('reset', async ctx => {
+  if (ctx.chat.id.toString() !== process.env.CHAT_ID) {
+    ctx.reply('🤖 Nice try! But I only respond to my master. Go get your own weather bot! 😤');
+    return;
+  }
+  resetDefaultCity(ctx.chat.id.toString());
+  ctx.reply('✅ Default city reset to Astaneh-ye Ashrafiyeh');
+  const weather = await getWeather('Astaneh-ye Ashrafiyeh');
+  ctx.reply(weather);
+});
+
 // Handle text messages
 bot.on('text', async ctx => {
+  if (ctx.chat.id.toString() !== process.env.CHAT_ID) {
+    ctx.reply('🤖 Nice try! But I only respond to my master. Go get your own weather bot! 😤');
+    return;
+  }
   if (!ctx.message.text.startsWith('/')) {
     console.log(
       `💬 Text message from ${ctx.from.username || ctx.from.id} (Chat ID: ${ctx.chat.id}): ${ctx.message.text}`
     );
-    const weather = await getWeather();
+    const weather = await getWeather(getDefaultCity(ctx.chat.id.toString()));
     ctx.reply(weather);
   }
 });

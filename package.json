@@ -2,6 +2,9 @@
   "name": "t-weather-notif",
   "version": "1.0.0",
   "main": "dist/index.js",
+  "engines": {
+    "node": ">=22.14.0"
+  },
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",

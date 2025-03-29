@@ -140,41 +140,87 @@ function getWeatherEmoji(weatherMain: string): string {
 }
 
 // Start command
-bot.command('start', ctx => {
+bot.command('start', async ctx => {
   if (ctx.chat.id.toString() !== process.env.CHAT_ID) {
-    ctx.reply('🤖 Nice try! But I only respond to my master. Go get your own weather bot! 😤');
+    try {
+      await ctx.reply(
+        "👋 Welcome! This is a private weather bot. Reach out to @pmkarim if you'd like to join! 🌤️"
+      );
+    } catch (error: any) {
+      if (error.description === 'Chat not found') {
+        console.log('❌ Chat not found. Skipping unauthorized access message.');
+      } else {
+        console.error('❌ Error sending message:', error);
+      }
+    }
     return;
   }
   console.log(
     `👋 New user started bot: ${ctx.from.username || ctx.from.id} (Chat ID: ${ctx.chat.id})`
   );
-  ctx.reply(
-    'Hello! Welcome to my weather bot 👋\nSend any message to get weather in Astaneh-ye Ashrafiyeh, or use /weather <city> for a specific city.'
-  );
+  try {
+    await ctx.reply(
+      'Hello! Welcome to my weather bot 👋\nSend any message to get weather in Astaneh-ye Ashrafiyeh, or use /weather <city> for a specific city.'
+    );
+  } catch (error: any) {
+    if (error.description === 'Chat not found') {
+      console.log('❌ Chat not found. Skipping start message.');
+    } else {
+      console.error('❌ Error sending start message:', error);
+    }
+  }
 });
 
 // Help command
-bot.command('help', ctx => {
+bot.command('help', async ctx => {
   if (ctx.chat.id.toString() !== process.env.CHAT_ID) {
-    ctx.reply('🤖 Nice try! But I only respond to my master. Go get your own weather bot! 😤');
+    try {
+      await ctx.reply(
+        "👋 Hi there! This is an exclusive weather bot. If you're interested in using it, please contact @pmkarim 🌤️"
+      );
+    } catch (error: any) {
+      if (error.description === 'Chat not found') {
+        console.log('❌ Chat not found. Skipping unauthorized access message.');
+      } else {
+        console.error('❌ Error sending message:', error);
+      }
+    }
     return;
   }
   console.log(
     `❓ Help requested by: ${ctx.from.username || ctx.from.id} (Chat ID: ${ctx.chat.id})`
   );
-  ctx.reply(
-    'Available commands:\n' +
-      '/weather <city> - Get weather for a specific city\n' +
-      '/setdefault <city> - Set your default city\n' +
-      '/reset - Reset to default city (Astaneh-ye Ashrafiyeh)\n' +
-      '/start - Start the bot'
-  );
+  try {
+    await ctx.reply(
+      'Available commands:\n' +
+        '/weather <city> - Get weather for a specific city\n' +
+        '/setdefault <city> - Set your default city\n' +
+        '/reset - Reset to default city (Astaneh-ye Ashrafiyeh)\n' +
+        '/start - Start the bot'
+    );
+  } catch (error: any) {
+    if (error.description === 'Chat not found') {
+      console.log('❌ Chat not found. Skipping help message.');
+    } else {
+      console.error('❌ Error sending help message:', error);
+    }
+  }
 });
 
 // Weather command
 bot.command('weather', async ctx => {
   if (ctx.chat.id.toString() !== process.env.CHAT_ID) {
-    ctx.reply('🤖 Nice try! But I only respond to my master. Go get your own weather bot! 😤');
+    try {
+      await ctx.reply(
+        "👋 Hi there! This is an exclusive weather bot. If you're interested in using it, please contact @pmkarim 🌤️"
+      );
+    } catch (error: any) {
+      if (error.description === 'Chat not found') {
+        console.log('❌ Chat not found. Skipping unauthorized access message.');
+      } else {
+        console.error('❌ Error sending message:', error);
+      }
+    }
     return;
   }
   const city =
@@ -183,42 +229,104 @@ bot.command('weather', async ctx => {
     `🌍 Weather command for ${city} by ${ctx.from.username || ctx.from.id} (Chat ID: ${ctx.chat.id})`
   );
   const weather = await getWeather(city);
-  ctx.reply(weather);
+  try {
+    await ctx.reply(weather);
+  } catch (error: any) {
+    if (error.description === 'Chat not found') {
+      console.log('❌ Chat not found. Skipping weather report.');
+    } else {
+      console.error('❌ Error sending weather report:', error);
+    }
+  }
 });
 
 // Set default city command
 bot.command('setdefault', async ctx => {
   if (ctx.chat.id.toString() !== process.env.CHAT_ID) {
-    ctx.reply('🤖 Nice try! But I only respond to my master. Go get your own weather bot! 😤');
+    try {
+      await ctx.reply(
+        "👋 Hi there! This is an exclusive weather bot. If you're interested in using it, please contact @pmkarim 🌤️"
+      );
+    } catch (error: any) {
+      if (error.description === 'Chat not found') {
+        console.log('❌ Chat not found. Skipping unauthorized access message.');
+      } else {
+        console.error('❌ Error sending message:', error);
+      }
+    }
     return;
   }
   const city = ctx.message.text.split(' ').slice(1).join(' ');
   if (!city) {
-    ctx.reply('Please provide a city name. Example: /setdefault Tehran');
+    try {
+      await ctx.reply('Please provide a city name. Example: /setdefault Tehran');
+    } catch (error: any) {
+      if (error.description === 'Chat not found') {
+        console.log('❌ Chat not found. Skipping error message.');
+      } else {
+        console.error('❌ Error sending message:', error);
+      }
+    }
     return;
   }
   setDefaultCity(ctx.chat.id.toString(), city);
-  ctx.reply(`✅ Default city set to ${city}`);
-  const weather = await getWeather(city);
-  ctx.reply(weather);
+  try {
+    await ctx.reply(`✅ Default city set to ${city}`);
+    const weather = await getWeather(city);
+    await ctx.reply(weather);
+  } catch (error: any) {
+    if (error.description === 'Chat not found') {
+      console.log('❌ Chat not found. Skipping setdefault messages.');
+    } else {
+      console.error('❌ Error sending setdefault messages:', error);
+    }
+  }
 });
 
 // Reset default city command
 bot.command('reset', async ctx => {
   if (ctx.chat.id.toString() !== process.env.CHAT_ID) {
-    ctx.reply('🤖 Nice try! But I only respond to my master. Go get your own weather bot! 😤');
+    try {
+      await ctx.reply(
+        "👋 Hi there! This is an exclusive weather bot. If you're interested in using it, please contact @pmkarim 🌤️"
+      );
+    } catch (error: any) {
+      if (error.description === 'Chat not found') {
+        console.log('❌ Chat not found. Skipping unauthorized access message.');
+      } else {
+        console.error('❌ Error sending message:', error);
+      }
+    }
     return;
   }
   resetDefaultCity(ctx.chat.id.toString());
-  ctx.reply('✅ Default city reset to Astaneh-ye Ashrafiyeh');
-  const weather = await getWeather('Astaneh-ye Ashrafiyeh');
-  ctx.reply(weather);
+  try {
+    await ctx.reply('✅ Default city reset to Astaneh-ye Ashrafiyeh');
+    const weather = await getWeather('Astaneh-ye Ashrafiyeh');
+    await ctx.reply(weather);
+  } catch (error: any) {
+    if (error.description === 'Chat not found') {
+      console.log('❌ Chat not found. Skipping reset messages.');
+    } else {
+      console.error('❌ Error sending reset messages:', error);
+    }
+  }
 });
 
 // Handle text messages
 bot.on('text', async ctx => {
   if (ctx.chat.id.toString() !== process.env.CHAT_ID) {
-    ctx.reply('🤖 Nice try! But I only respond to my master. Go get your own weather bot! 😤');
+    try {
+      await ctx.reply(
+        "👋 Hi there! This is an exclusive weather bot. If you're interested in using it, please contact @pmkarim 🌤️"
+      );
+    } catch (error: any) {
+      if (error.description === 'Chat not found') {
+        console.log('❌ Chat not found. Skipping unauthorized access message.');
+      } else {
+        console.error('❌ Error sending message:', error);
+      }
+    }
     return;
   }
   if (!ctx.message.text.startsWith('/')) {
@@ -226,7 +334,15 @@ bot.on('text', async ctx => {
       `💬 Text message from ${ctx.from.username || ctx.from.id} (Chat ID: ${ctx.chat.id}): ${ctx.message.text}`
     );
     const weather = await getWeather(getDefaultCity(ctx.chat.id.toString()));
-    ctx.reply(weather);
+    try {
+      await ctx.reply(weather);
+    } catch (error: any) {
+      if (error.description === 'Chat not found') {
+        console.log('❌ Chat not found. Skipping weather report.');
+      } else {
+        console.error('❌ Error sending weather report:', error);
+      }
+    }
   }
 });
 
@@ -238,7 +354,13 @@ console.log('✅ Bot is running!');
 if (process.env.CHAT_ID) {
   console.log('📱 Sending startup weather report...');
   getWeather().then(weather => {
-    bot.telegram.sendMessage(process.env.CHAT_ID!, weather);
+    bot.telegram.sendMessage(process.env.CHAT_ID!, weather).catch(error => {
+      if (error.description === 'Chat not found') {
+        console.log('❌ Chat not found. Skipping startup weather report.');
+      } else {
+        console.error('❌ Error sending startup weather report:', error);
+      }
+    });
   });
 }
 

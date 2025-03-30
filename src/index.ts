@@ -86,7 +86,7 @@ async function getWeather(city: string = 'Astaneh-ye Ashrafiyeh') {
     const hourlyForecast = forecastData.list
       .filter((item: ForecastItem) => {
         const forecastTime = new Date(item.dt * 1000);
-        return forecastTime <= endOfDay;
+        return forecastTime > now && forecastTime <= endOfDay;
       })
       .reduce((acc: string[], item: ForecastItem) => {
         const time = new Date(item.dt * 1000).toLocaleTimeString('en-US', {

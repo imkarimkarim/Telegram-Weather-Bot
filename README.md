@@ -1,4 +1,4 @@
-# T-Weather-Notif 🌤️
+# Telegram Weather Bot 🌤️
 
 A Telegram bot that provides weather information with support for both Gregorian and Jalali calendars.
 

@@ -9,7 +9,6 @@ A Telegram bot that provides weather information with support for both Gregorian
 - ⏰ 24-hour weather forecast
 - 🌍 Support for multiple cities
 - 🔄 Daily weather notifications
-- 💾 Default city preference
 
 ## Screenshot
 
@@ -20,8 +19,8 @@ A Telegram bot that provides weather information with support for both Gregorian
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/imkarimkarim/t-weather-notif.git
-cd t-weather-notif
+git clone https://github.com/imkarimkarim/Telegram-Weather-Bot.git
+cd Telegram-Weather-Bot
 ```
 
 2. Install dependencies:

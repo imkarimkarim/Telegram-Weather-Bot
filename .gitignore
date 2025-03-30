@@ -24,3 +24,6 @@ build/
 Thumbs.db 
 
 logs/
+
+# Data
+data/

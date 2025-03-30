@@ -68,7 +68,8 @@ async function getWeather(city: string = 'Astaneh-ye Ashrafiyeh') {
 
     // Get current date
     const now = new Date();
-    const gregorianDate = now.toLocaleDateString('en-US', {
+    const tehranTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Tehran' }));
+    const gregorianDate = tehranTime.toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -76,20 +77,35 @@ async function getWeather(city: string = 'Astaneh-ye Ashrafiyeh') {
     });
 
     // Convert to Jalali
-    const jalaaliDate = jalaali.toJalaali(now.getFullYear(), now.getMonth() + 1, now.getDate());
+    const jalaaliDate = jalaali.toJalaali(
+      tehranTime.getFullYear(),
+      tehranTime.getMonth() + 1,
+      tehranTime.getDate()
+    );
     const jalaaliFormatted = `${jalaaliDate.jd} ${getJalaaliMonthName(jalaaliDate.jm)} ${jalaaliDate.jy}`;
 
     // Format hourly forecast - get 12 reports with 2-hour intervals
-    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+    const endOfDay = new Date(
+      tehranTime.getFullYear(),
+      tehranTime.getMonth(),
+      tehranTime.getDate(),
+      23,
+      59,
+      59
+    );
     const twoHoursInMs = 2 * 60 * 60 * 1000;
 
     const hourlyForecast = forecastData.list
       .filter((item: ForecastItem) => {
-        const forecastTime = new Date(item.dt * 1000);
-        return forecastTime > now && forecastTime <= endOfDay;
+        const forecastTime = new Date(
+          new Date(item.dt * 1000).toLocaleString('en-US', { timeZone: 'Asia/Tehran' })
+        );
+        return forecastTime > tehranTime && forecastTime <= endOfDay;
       })
       .reduce((acc: string[], item: ForecastItem) => {
-        const time = new Date(item.dt * 1000).toLocaleTimeString('en-US', {
+        const time = new Date(
+          new Date(item.dt * 1000).toLocaleString('en-US', { timeZone: 'Asia/Tehran' })
+        ).toLocaleTimeString('en-US', {
           hour: '2-digit',
           minute: '2-digit',
           hour12: true,
